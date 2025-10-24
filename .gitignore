@@ -7,3 +7,7 @@ __pycache__/
 .idea/
 .pytest_cache/
 .pytest_cache/
+uv.lock
+*.pyc
+*.log
+*.txt
