@@ -23,44 +23,53 @@ git clone <repository-url>
 cd multi_agent_debate
 ```
 
-2. Install dependencies:
+2. Create and activate a virtual environment with uv:
 ```bash
-pip install -r requirements.txt
+uv venv
+source .venv/bin/activate  # On Windows: .venv\Scripts\activate
 ```
 
-3. Set up environment variables:
+3. Install dependencies directly from requirements.txt:
 ```bash
-cp .env.example .env
+uv pip install -r requirements.txt
+```
+
+4. Set up environment variables:
+```bash
+cp env_example .env
 # Edit .env with your Z.AI API key
 ```
 
+5. If you encounter import errors with langchain, reinstall dependencies:
+```bash
+uv pip install -r requirements.txt --force-reinstall
+```
+
+Note: During execution, you may encounter content filter errors from the API (Error code: 400 - 'System detected potentially unsafe or sensitive content'). This is a safety feature of the GLM-4.6 model and may occur with certain debate topics. If this happens, try with a different topic or rephrase the current topic to be less sensitive.
 ## Usage
 
 ### Running a Debate
 
 ```bash
-python main.py --topic "Should artificial intelligence be regulated?"
+uv run main.py --topic "Should artificial intelligence be regulated?"
 ```
 
 ### Running Experiments
 
-```python
-from src.experiments import ExperimentRunner
-
-runner = ExperimentRunner()
-results = runner.run_standard_experiments("Your debate topic here")
+```bash
+uv run -c "from src.experiments import ExperimentRunner; runner = ExperimentRunner(); results = runner.run_standard_experiments('Your debate topic here')"
 ```
 
 ### Running Tests
 
 ```bash
-python run_tests.py
+uv run run_tests.py
 ```
 
 ### Generating Deliverables
 
 ```bash
-python generate_deliverables.py
+uv run generate_deliverables.py
 ```
 
 ## Project Structure

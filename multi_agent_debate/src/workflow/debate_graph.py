@@ -207,47 +207,64 @@ def create_debate_graph(
         workflow.add_node("judge", judge_node)
     
     # Add conditional edges
+    researcher_edges = {}
+    if "critic" in agent_types:
+        researcher_edges["critic"] = "critic"
+    if "synthesizer" in agent_types:
+        researcher_edges["synthesizer"] = "synthesizer"
+    if "devils_advocate" in agent_types:
+        researcher_edges["devils_advocate"] = "devils_advocate"
+    if "judge" in agent_types:
+        researcher_edges["judge"] = "judge"
+    researcher_edges[END] = END
+    
     workflow.add_conditional_edges(
         "researcher",
         check_round_completion,
-        {
-            "critic": "critic",
-            "synthesizer": "synthesizer",
-            "devils_advocate": "devils_advocate",
-            "judge": "judge",
-            END: END
-        }
+        researcher_edges
     )
     
-    workflow.add_conditional_edges(
-        "critic",
-        check_round_completion,
-        {
-            "synthesizer": "synthesizer",
-            "devils_advocate": "devils_advocate",
-            "judge": "judge",
-            END: END
-        }
-    )
+    if "critic" in agent_types:
+        critic_edges = {}
+        if "synthesizer" in agent_types:
+            critic_edges["synthesizer"] = "synthesizer"
+        if "devils_advocate" in agent_types:
+            critic_edges["devils_advocate"] = "devils_advocate"
+        if "judge" in agent_types:
+            critic_edges["judge"] = "judge"
+        critic_edges[END] = END
+        
+        workflow.add_conditional_edges(
+            "critic",
+            check_round_completion,
+            critic_edges
+        )
     
-    workflow.add_conditional_edges(
-        "synthesizer",
-        check_round_completion,
-        {
-            "devils_advocate": "devils_advocate",
-            "judge": "judge",
-            END: END
-        }
-    )
+    if "synthesizer" in agent_types:
+        synthesizer_edges = {}
+        if "devils_advocate" in agent_types:
+            synthesizer_edges["devils_advocate"] = "devils_advocate"
+        if "judge" in agent_types:
+            synthesizer_edges["judge"] = "judge"
+        synthesizer_edges[END] = END
+        
+        workflow.add_conditional_edges(
+            "synthesizer",
+            check_round_completion,
+            synthesizer_edges
+        )
     
-    workflow.add_conditional_edges(
-        "devils_advocate",
-        check_round_completion,
-        {
-            "judge": "judge",
-            END: END
-        }
-    )
+    if "devils_advocate" in agent_types:
+        devils_advocate_edges = {}
+        if "judge" in agent_types:
+            devils_advocate_edges["judge"] = "judge"
+        devils_advocate_edges[END] = END
+        
+        workflow.add_conditional_edges(
+            "devils_advocate",
+            check_round_completion,
+            devils_advocate_edges
+        )
     
     workflow.add_edge("judge", END)
     

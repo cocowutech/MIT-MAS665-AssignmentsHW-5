@@ -93,9 +93,11 @@ class DebateEvaluator:
             "latency": {
                 "seconds": debate_record.get("latency", 0),
                 "rating": self._get_latency_rating(debate_record.get("latency", 0))
-            },
-            "summary": self._generate_summary(evaluation, debate_record)
+            }
         }
+        
+        # Add summary after the evaluation dictionary is fully created
+        evaluation["summary"] = self._generate_summary(evaluation, debate_record)
         
         return evaluation
     
