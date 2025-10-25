@@ -13,6 +13,7 @@ sys.path.append(str(Path(__file__).parent / "src"))
 
 from src.experiments import ExperimentRunner
 from src.evaluation import DebateEvaluator
+from src.debate_system import DebateSystem
 
 def create_diagram():
     """Create a diagram of agent roles and message flow."""
@@ -279,6 +280,37 @@ def create_results_visualization(results):
     
     return viz_path
 
+def create_experiment_graphs(results):
+    """Create graph visualizations for each experiment."""
+    debate_system = DebateSystem()
+    graph_paths = []
+    
+    # Create graphs directory
+    graphs_dir = Path("Deliverables/graphs")
+    graphs_dir.mkdir(exist_ok=True, parents=True)
+    
+    for exp in results['experiments']:
+        config = exp['configuration']
+        experiment_id = exp['experiment_id']
+        
+        # Create graph visualization
+        graph_path = debate_system.visualize_debate_graph(
+            agent_types=config['agents'],
+            rounds=config['rounds'],
+            temperature=config['temperature'],
+            include_devils_advocate=config.get('include_devils_advocate', False),
+            experiment_id=experiment_id,
+            output_dir="Deliverables/graphs"
+        )
+        
+        graph_paths.append({
+            "experiment_id": experiment_id,
+            "experiment_name": exp['experiment_name'],
+            "graph_path": graph_path
+        })
+    
+    return graph_paths
+
 def main():
     """Main function to generate all deliverables."""
     print("Generating deliverables for the multi-agent debate system...")
@@ -323,12 +355,25 @@ def main():
     # Create results visualization
     print("Creating results visualization...")
     viz_path = create_results_visualization(results)
+
+    # Create experiment graphs
+    print("Creating experiment graphs...")
+    graph_paths = create_experiment_graphs(results)
+    
+    # Create complete flow visualization
+    print("Creating complete flow visualization...")
+    import sys
+    sys.path.append(str(Path(__file__).parent / "Deliverables" / "graphs"))
+    from complete_flow_visualization import create_complete_flow_visualization
+    flow_viz_path = create_complete_flow_visualization()
     
     print("\nDeliverables generated successfully!")
     print(f"Diagram: {diagram_path}")
     print(f"Proof of Execution: {proof_path}")
     print(f"Mini-Report: {report_path}")
     print(f"Results Visualization: {viz_path}")
+    print(f"Experiment Graphs: {graph_paths}")
+    print(f"Complete Flow Visualization: {flow_viz_path}")
     
     # Create a summary file with all deliverable paths
     summary_path = Path("Deliverables/README.md")
@@ -339,10 +384,25 @@ def main():
         f.write(f"- [System Diagram](diagram.png)\n")
         f.write(f"- [Proof of Execution](proof_of_execution.md)\n")
         f.write(f"- [Mini-Report](mini_report.md)\n")
-        f.write(f"- [Results Visualization](results_visualization.png)\n\n")
+        f.write(f"- [Results Visualization](results_visualization.png)\n")
+        f.write(f"- [Experiment Graphs](graphs/)\n")
+        f.write(f"- [Complete Flow Visualization](complete_flow_visualization.png)\n\n")
         f.write("## Experiment Results\n\n")
         f.write(f"Topic: {results['topic']}\n\n")
-        f.write("For detailed experiment results, see the files in the `experiments/results/` directory.\n")
+        f.write("For detailed experiment results, see the files in the `experiments/results/` directory.\n\n")
+        
+        # Add experiment graph information
+        f.write("## Experiment Graphs\n\n")
+        f.write("Each experiment has a corresponding graph visualization showing the agent flow:\n\n")
+        
+        for graph_info in graph_paths:
+            exp_name = graph_info['experiment_name']
+            exp_id = graph_info['experiment_id']
+            graph_file = Path(graph_info['graph_path']).name
+            
+            f.write(f"### {exp_name}\n\n")
+            f.write(f"- [Graph Visualization](graphs/{graph_file})\n")
+            f.write(f"- Experiment ID: {exp_id}\n\n")
     
     print(f"Summary file created: {summary_path}")
 

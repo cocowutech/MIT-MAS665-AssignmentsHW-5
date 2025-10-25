@@ -37,7 +37,7 @@ uv pip install -r requirements.txt
 4. Set up environment variables:
 ```bash
 cp env_example .env
-# Edit .env with your Z.AI API key
+# Edit .env with your Z.AI API key - this is required for the system to work
 ```
 
 5. If you encounter import errors with langchain, reinstall dependencies:
@@ -46,6 +46,7 @@ uv pip install -r requirements.txt --force-reinstall
 ```
 
 Note: During execution, you may encounter content filter errors from the API (Error code: 400 - 'System detected potentially unsafe or sensitive content'). This is a safety feature of the GLM-4.6 model and may occur with certain debate topics. If this happens, try with a different topic or rephrase the current topic to be less sensitive.
+
 ## Usage
 
 ### Running a Debate
@@ -54,10 +55,21 @@ Note: During execution, you may encounter content filter errors from the API (Er
 uv run main.py --topic "Should artificial intelligence be regulated?"
 ```
 
-### Running Experiments
+Optional parameters:
+- `--output`: Specify output directory for results (default: "Deliverables")
+- `--short`: Run a shorter set of experiments for quick testing
+
+Example with options:
+```bash
+uv run main.py --topic "Should artificial intelligence be regulated?" --output my_results --short
+```
+
+### Running Experiments Directly
+
+If you want to run experiments without using the main script:
 
 ```bash
-uv run -c "from src.experiments import ExperimentRunner; runner = ExperimentRunner(); results = runner.run_standard_experiments('Your debate topic here')"
+uv run python -c "from src.experiments import ExperimentRunner; runner = ExperimentRunner('Your debate topic here'); results = runner.run_standard_experiments('Your debate topic here')"
 ```
 
 ### Running Tests

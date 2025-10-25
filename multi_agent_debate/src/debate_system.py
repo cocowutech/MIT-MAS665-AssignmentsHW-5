@@ -4,6 +4,8 @@ import time
 import uuid
 from typing import Dict, Any, List, Optional, Tuple
 from datetime import datetime
+from pathlib import Path
+import json
 from src.workflow import create_debate_graph, initialize_debate_state
 from src.utils.config import config
 
@@ -13,6 +15,102 @@ class DebateSystem:
     def __init__(self):
         self.config = config
         self.debate_history: List[Dict[str, Any]] = []
+    
+    def visualize_debate_graph(
+        self,
+        agent_types: List[str] = None,
+        rounds: int = 2,
+        temperature: float = None,
+        include_devils_advocate: bool = False,
+        experiment_id: str = None,
+        output_dir: str = "Deliverables"
+    ) -> str:
+        """Create and save a visualization of the debate graph."""
+        # Create the graph
+        graph = create_debate_graph(
+            agent_types=agent_types,
+            rounds=rounds,
+            temperature=temperature,
+            include_devils_advocate=include_devils_advocate
+        )
+        
+        # Generate experiment ID if not provided
+        if experiment_id is None:
+            experiment_id = str(uuid.uuid4())
+        
+        # Create output directory
+        output_path = Path(output_dir)
+        output_path.mkdir(exist_ok=True, parents=True)
+        
+        # Generate the graph visualization
+        try:
+            # Get the graph as a Mermaid diagram
+            graph_mermaid = graph.get_graph().draw_mermaid()
+            
+            # Save the Mermaid diagram
+            mermaid_file = output_path / f"graph_{experiment_id}.mmd"
+            with open(mermaid_file, 'w') as f:
+                f.write(graph_mermaid)
+            
+            # Also save as PNG if possible
+            try:
+                # Try to generate a PNG using mermaid.ink
+                import base64
+                import urllib.parse
+                import urllib.request
+                
+                # Encode the Mermaid diagram
+                encoded = base64.b64encode(graph_mermaid.encode()).decode()
+                url = f"https://mermaid.ink/img/{encoded}"
+                
+                # Download the image
+                img_file = output_path / f"graph_{experiment_id}.png"
+                urllib.request.urlretrieve(url, img_file)
+                
+                return str(img_file)
+            except Exception as e:
+                print(f"Could not generate PNG image: {e}")
+                return str(mermaid_file)
+                
+        except Exception as e:
+            print(f"Error generating graph visualization: {e}")
+            # Fallback to a simple text representation
+            return self._create_simple_graph_representation(
+                agent_types, rounds, temperature, include_devils_advocate, 
+                experiment_id, output_path
+            )
+    
+    def _create_simple_graph_representation(
+        self,
+        agent_types: List[str],
+        rounds: int,
+        temperature: float,
+        include_devils_advocate: bool,
+        experiment_id: str,
+        output_path: Path
+    ) -> str:
+        """Create a simple text representation of the graph as a fallback."""
+        # Create a simple text representation
+        graph_text = f"# Debate Graph Visualization\n\n"
+        graph_text += f"## Configuration\n"
+        graph_text += f"- Agents: {', '.join(agent_types)}\n"
+        graph_text += f"- Rounds: {rounds}\n"
+        graph_text += f"- Temperature: {temperature}\n"
+        graph_text += f"- Devil's Advocate: {include_devils_advocate}\n\n"
+        
+        graph_text += f"## Agent Flow\n"
+        for i, agent in enumerate(agent_types):
+            if i < len(agent_types) - 1:
+                graph_text += f"{agent} → "
+            else:
+                graph_text += f"{agent}\n"
+        
+        # Save the text representation
+        text_file = output_path / f"graph_{experiment_id}.txt"
+        with open(text_file, 'w') as f:
+            f.write(graph_text)
+        
+        return str(text_file)
     
     def run_debate(
         self,
@@ -86,6 +184,17 @@ class DebateSystem:
             "latency": latency,
             "total_messages": len(result["messages"])
         }
+        
+        # Generate and save graph visualization
+        graph_path = self.visualize_debate_graph(
+            agent_types=agent_types,
+            rounds=rounds,
+            temperature=temperature,
+            include_devils_advocate=include_devils_advocate,
+            experiment_id=experiment_id,
+            output_dir="Deliverables/graphs"
+        )
+        debate_record["graph_path"] = graph_path
         
         # Add to history
         self.debate_history.append(debate_record)

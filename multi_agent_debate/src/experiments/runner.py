@@ -1,6 +1,7 @@
 """Experiment runner for the multi-agent debate system."""
 
 import json
+import re
 import time
 from typing import Dict, Any, List
 from datetime import datetime
@@ -13,90 +14,120 @@ from src.utils.config import config
 class ExperimentRunner:
     """Runner for conducting experiments with different configurations."""
     
-    def __init__(self):
+    def __init__(self, topic: str = None):
         self.debate_system = DebateSystem()
         self.evaluator = DebateEvaluator()
-        self.results_dir = Path("experiments/results")
-        self.results_dir.mkdir(exist_ok=True)
+        self.base_results_dir = Path("experiments/results")
+        self.base_results_dir.mkdir(exist_ok=True, parents=True)
+        
+        # Create topic-specific directory if topic is provided
+        if topic:
+            self.topic_dir_name = self._sanitize_topic_name(topic)
+            self.results_dir = self.base_results_dir / self.topic_dir_name
+            self.results_dir.mkdir(exist_ok=True, parents=True)
+        else:
+            self.results_dir = self.base_results_dir
     
-    def run_standard_experiments(self, topic: str) -> Dict[str, Any]:
+    def _sanitize_topic_name(self, topic: str) -> str:
+        """Sanitize topic name for use as directory name."""
+        # Replace whitespace with underscores
+        sanitized = re.sub(r'\s+', '_', topic.strip())
+        # Remove special characters, keep only alphanumeric, underscores, and hyphens
+        sanitized = re.sub(r'[^a-zA-Z0-9_-]', '', sanitized)
+        # Ensure it doesn't start with a number or special character
+        if sanitized and not sanitized[0].isalpha():
+            sanitized = f"topic_{sanitized}"
+        return sanitized.lower()
+    
+    def run_standard_experiments(self, topic: str, short: bool = False) -> Dict[str, Any]:
         """Run the standard set of experiments as specified in the requirements."""
         
         # Define experiment configurations
-        experiment_configs = [
-            # Experiment 1: 2 agents vs 4 agents
-            {
-                "name": "2_agents",
-                "description": "Debate with 2 agents (Researcher, Judge)",
-                "agent_types": ["researcher", "judge"],
-                "rounds": 2,
-                "temperature": config.default_temperature,
-                "include_devils_advocate": False
-            },
-            {
-                "name": "4_agents",
-                "description": "Debate with 4 agents (Researcher, Critic, Synthesizer, Judge)",
-                "agent_types": ["researcher", "critic", "synthesizer", "judge"],
-                "rounds": 2,
-                "temperature": config.default_temperature,
-                "include_devils_advocate": False
-            },
-            
-            # Experiment 2: 1 round vs 3 rounds
-            {
-                "name": "1_round",
-                "description": "Debate with 1 round",
-                "agent_types": ["researcher", "critic", "synthesizer", "judge"],
-                "rounds": 1,
-                "temperature": config.default_temperature,
-                "include_devils_advocate": False
-            },
-            {
-                "name": "3_rounds",
-                "description": "Debate with 3 rounds",
-                "agent_types": ["researcher", "critic", "synthesizer", "judge"],
-                "rounds": 3,
-                "temperature": config.default_temperature,
-                "include_devils_advocate": False
-            },
-            
-            # Experiment 3: With and without Devil's Advocate
-            {
-                "name": "without_devils_advocate",
-                "description": "Debate without Devil's Advocate",
-                "agent_types": ["researcher", "critic", "synthesizer", "judge"],
-                "rounds": 2,
-                "temperature": config.default_temperature,
-                "include_devils_advocate": False
-            },
-            {
-                "name": "with_devils_advocate",
-                "description": "Debate with Devil's Advocate",
-                "agent_types": ["researcher", "critic", "synthesizer", "judge"],
-                "rounds": 2,
-                "temperature": config.default_temperature,
-                "include_devils_advocate": True
-            },
-            
-            # Experiment 4: Low vs High temperature
-            {
-                "name": "low_temperature",
-                "description": "Debate with low temperature (0.2)",
-                "agent_types": ["researcher", "critic", "synthesizer", "judge"],
-                "rounds": 2,
-                "temperature": config.low_temperature,
-                "include_devils_advocate": False
-            },
-            {
-                "name": "high_temperature",
-                "description": "Debate with high temperature (0.9)",
-                "agent_types": ["researcher", "critic", "synthesizer", "judge"],
-                "rounds": 2,
-                "temperature": config.high_temperature,
-                "include_devils_advocate": False
-            }
-        ]
-        
+        if short:
+            experiment_configs = [
+                {
+                    "name": "with_devils_advocate",
+                    "description": "Debate with Devil's Advocate",
+                    "agent_types": ["researcher", "critic", "synthesizer", "judge"],
+                    "rounds": 2,
+                    "temperature": config.default_temperature,
+                    "include_devils_advocate": True
+                }
+            ]
+        else:
+            experiment_configs = [
+                # Experiment 1: 2 agents vs 4 agents
+                {
+                    "name": "2_agents",
+                    "description": "Debate with 2 agents (Researcher, Judge)",
+                    "agent_types": ["researcher", "judge"],
+                    "rounds": 2,
+                    "temperature": config.default_temperature,
+                    "include_devils_advocate": False
+                },
+                {
+                    "name": "4_agents",
+                    "description": "Debate with 4 agents (Researcher, Critic, Synthesizer, Judge)",
+                    "agent_types": ["researcher", "critic", "synthesizer", "judge"],
+                    "rounds": 2,
+                    "temperature": config.default_temperature,
+                    "include_devils_advocate": False
+                },
+                
+                # Experiment 2: 1 round vs 3 rounds
+                {
+                    "name": "1_round",
+                    "description": "Debate with 1 round",
+                    "agent_types": ["researcher", "critic", "synthesizer", "judge"],
+                    "rounds": 1,
+                    "temperature": config.default_temperature,
+                    "include_devils_advocate": False
+                },
+                {
+                    "name": "3_rounds",
+                    "description": "Debate with 3 rounds",
+                    "agent_types": ["researcher", "critic", "synthesizer", "judge"],
+                    "rounds": 3,
+                    "temperature": config.default_temperature,
+                    "include_devils_advocate": False
+                },
+                
+                # Experiment 3: With and without Devil's Advocate
+                {
+                    "name": "without_devils_advocate",
+                    "description": "Debate without Devil's Advocate",
+                    "agent_types": ["researcher", "critic", "synthesizer", "judge"],
+                    "rounds": 2,
+                    "temperature": config.default_temperature,
+                    "include_devils_advocate": False
+                },
+                {
+                    "name": "with_devils_advocate",
+                    "description": "Debate with Devil's Advocate",
+                    "agent_types": ["researcher", "critic", "synthesizer", "judge"],
+                    "rounds": 2,
+                    "temperature": config.default_temperature,
+                    "include_devils_advocate": True
+                },
+                
+                # Experiment 4: Low vs High temperature
+                {
+                    "name": "low_temperature",
+                    "description": "Debate with low temperature (0.2)",
+                    "agent_types": ["researcher", "critic", "synthesizer", "judge"],
+                    "rounds": 2,
+                    "temperature": config.low_temperature,
+                    "include_devils_advocate": False
+                },
+                {
+                    "name": "high_temperature",
+                    "description": "Debate with high temperature (0.9)",
+                    "agent_types": ["researcher", "critic", "synthesizer", "judge"],
+                    "rounds": 2,
+                    "temperature": config.high_temperature,
+                    "include_devils_advocate": False
+                }
+            ]
         # Run experiments
         results = []
         for exp_config in experiment_configs:
@@ -159,7 +190,9 @@ class ExperimentRunner:
     
     def save_experiment_result(self, result: Dict[str, Any]):
         """Save an individual experiment result."""
-        filename = f"{result['experiment_name']}_{datetime.now().strftime('%Y%m%d_%H%M%S')}.json"
+        # Sanitize experiment name for filename
+        exp_name = re.sub(r'[^a-zA-Z0-9_-]', '_', result['experiment_name'])
+        filename = f"{exp_name}_{datetime.now().strftime('%Y%m%d_%H%M%S')}.json"
         filepath = self.results_dir / filename
         
         with open(filepath, 'w') as f:

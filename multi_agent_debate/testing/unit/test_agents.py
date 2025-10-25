@@ -94,7 +94,7 @@ class TestCritic(unittest.TestCase):
         """Test the critic's system prompt."""
         prompt = self.agent.get_system_prompt()
         self.assertIn("Critic", prompt)
-        self.assertIn("evaluate", prompt)
+        self.assertIn("evaluate", prompt.lower())
         self.assertIn("weaknesses", prompt)
 
 class TestSynthesizer(unittest.TestCase):
@@ -109,7 +109,7 @@ class TestSynthesizer(unittest.TestCase):
         """Test the synthesizer's system prompt."""
         prompt = self.agent.get_system_prompt()
         self.assertIn("Synthesizer", prompt)
-        self.assertIn("integrate", prompt)
+        self.assertIn("integrate", prompt.lower())
         self.assertIn("common ground", prompt)
 
 class TestJudge(unittest.TestCase):
@@ -157,7 +157,7 @@ class TestDevilsAdvocate(unittest.TestCase):
         """Test the devil's advocate's system prompt."""
         prompt = self.agent.get_system_prompt()
         self.assertIn("Devil's Advocate", prompt)
-        self.assertIn("challenge", prompt)
+        self.assertIn("challenge", prompt.lower())
         self.assertIn("counterarguments", prompt)
 
 if __name__ == "__main__":

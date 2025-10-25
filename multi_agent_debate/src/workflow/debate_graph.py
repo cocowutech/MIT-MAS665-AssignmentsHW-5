@@ -170,14 +170,14 @@ def create_debate_graph(
         
         # If we've completed all agents in this round, move to next round or end
         if state["current_round"] >= state["total_rounds"]:
-            # Check if judge is in the sequence
+            # Check if judge is in sequence
             if "judge" in agent_types:
                 return "judge"
             else:
                 return END
         
-        # Continue with the current agent
-        return current
+        # Get the next agent in the sequence
+        return next_agent(agent_types, current)
     
     def next_agent(agent_sequence: List[str], current: str) -> str:
         """Get the next agent in the sequence."""
