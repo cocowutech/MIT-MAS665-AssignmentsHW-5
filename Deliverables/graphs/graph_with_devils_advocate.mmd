@@ -1,0 +1,32 @@
+---
+config:
+  flowchart:
+    curve: linear
+---
+graph TD;
+	__start__([<p>__start__</p>]):::first
+	researcher(researcher)
+	critic(critic)
+	synthesizer(synthesizer)
+	devils_advocate(devils_advocate)
+	judge(judge)
+	__end__([<p>__end__</p>]):::last
+	__start__ --> researcher;
+	critic -.-> __end__;
+	critic -.-> devils_advocate;
+	critic -.-> judge;
+	critic -.-> synthesizer;
+	devils_advocate -.-> __end__;
+	devils_advocate -.-> judge;
+	researcher -.-> __end__;
+	researcher -.-> critic;
+	researcher -.-> devils_advocate;
+	researcher -.-> judge;
+	researcher -.-> synthesizer;
+	synthesizer -.-> __end__;
+	synthesizer -.-> devils_advocate;
+	synthesizer -.-> judge;
+	judge --> __end__;
+	classDef default fill:#f2f0ff,line-height:1.2
+	classDef first fill-opacity:0
+	classDef last fill:#bfb6fc
