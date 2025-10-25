@@ -1,7 +1,5 @@
 # Multi-Agent Debate System: Proof of Execution
 
-Generated on: 2025-10-25 13:50:02
-
 ## System Architecture
 
 ![Agent Roles & Message Flow](diagram.png)

@@ -1,7 +1,5 @@
 # Multi-Agent Debate System: Mini-Report
 
-Generated on: 2025-10-25 13:50:02
-
 ## Scenario Tested
 
 **Topic:** Should artificial intelligence be regulated to ensure ethical development?
